@@ -1,19 +1,15 @@
 # directories
-.yarn/*
-!.yarn/patches
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
+.yarn/
+**/.coverage_artifacts
+**/.coverage_cache
+**/.coverage_contracts
 **/artifacts
 **/build
 **/cache
 **/coverage
-**/.coverage_artifacts
-**/.coverage_cache
-**/.coverage_contracts
 **/dist
 **/node_modules
+**/types
 
 # files
 *.env
