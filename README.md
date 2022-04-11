@@ -13,6 +13,22 @@ My favorite setup for writing Solidity smart contracts.
 This is a GitHub template, which means you can reuse it as many times as you want. You can do that by clicking the "Use this
 template" button at the top of the page.
 
+## To understand better the hardhat dev framework:
+
+Hardhat -> sets up development environment for all stages: (compiling, testing, deployment)
+GENERAL PURPOSE:
+Ethers -> library that allows for contracts interactions and the definition of wallets abstractions
+It is used in all dev stages: inside the typescript types, during testing and also for deployment
+COMPILING:
+SOLC -> solidity compiler
+TypeChain -> Generates typescript types for the smart contracts (pluggin) whenever we compile
+TESTING:
+Waffle-> testing framework for smart contracts
+Chai -> assertion library
+Mocha -> BDD/asynchronous testing/js testing framework
+DEPLOYMENT:
+Tasks -> They are scripts with a pre-defined structure that are to be run using hardhat CLI
+
 ## Usage
 
 ### Pre Requisites
