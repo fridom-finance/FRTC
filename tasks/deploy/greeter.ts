@@ -9,8 +9,8 @@ task("deploy:Greeter")
   .addParam("greeting", "Say hello, be nice")
   .setAction(async function (taskArguments: TaskArguments, { ethers }) {
     const signers: SignerWithAddress[] = await ethers.getSigners();
-    const greeterFactory: Greeter__factory = <Greeter__factory>await ethers.getContractFactory("Greeter");
-    const greeter: Greeter = <Greeter>await greeterFactory.deploy(taskArguments.greeting, { from: signers[0].address });
+    const greeterFactory: Greeter__factory = <Greeter__factory>await ethers.getContractFactory("Greeter", signers[0]);
+    const greeter: Greeter = <Greeter>await greeterFactory.deploy(taskArguments.greeting);
     await greeter.deployed();
     console.log("Greeter deployed to: ", greeter.address);
   });

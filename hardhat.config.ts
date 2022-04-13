@@ -9,6 +9,7 @@ import { resolve } from "path";
 import "solidity-coverage";
 
 import "./tasks/accounts";
+import "./tasks/balance";
 import "./tasks/deploy";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
@@ -45,6 +46,9 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
     case "bsc":
       jsonRpcUrl = "https://bsc-dataseed1.binance.org";
       break;
+    case "polygon-mumbai":
+      jsonRpcUrl = "https://polygon-mumbai.g.alchemy.com/v2/RGPhWsJCplbShwpSYOo1Df7oplSaTl8d";
+      break;
     default:
       jsonRpcUrl = "https://" + chain + ".infura.io/v3/" + infuraApiKey;
   }
@@ -60,7 +64,7 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
 }
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "polygon-mumbai",
   etherscan: {
     apiKey: {
       arbitrumOne: process.env.ARBISCAN_API_KEY,
