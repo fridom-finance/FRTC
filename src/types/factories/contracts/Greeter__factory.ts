@@ -3,7 +3,7 @@
 /* eslint-disable */
 import { Signer, utils, Contract, ContractFactory, Overrides } from "ethers";
 import type { Provider, TransactionRequest } from "@ethersproject/providers";
-import type { Greeter, GreeterInterface } from "../Greeter";
+import type { Greeter, GreeterInterface } from "../../contracts/Greeter";
 
 const _abi = [
   {
