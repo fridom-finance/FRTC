@@ -9,6 +9,7 @@ import type {
   CallOverrides,
   ContractTransaction,
   Overrides,
+  PayableOverrides,
   PopulatedTransaction,
   Signer,
   utils,
@@ -32,21 +33,25 @@ export interface FRTCInterface extends utils.Interface {
     "allowance(address,address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
+    "buy()": FunctionFragment;
+    "collectDeposits()": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
     "depositAddress()": FunctionFragment;
-    "deposits(address)": FunctionFragment;
     "feeOwner()": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
     "hurdleRate()": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
+    "investmentsState()": FunctionFragment;
+    "liquidationsState()": FunctionFragment;
     "managementFeePerSecond()": FunctionFragment;
     "marketSpread()": FunctionFragment;
+    "minDeposit()": FunctionFragment;
+    "minWithdrawal()": FunctionFragment;
+    "mintPendingInvestments(uint256)": FunctionFragment;
     "name()": FunctionFragment;
-    "pendingInvestments(address)": FunctionFragment;
-    "pendingLiquidations(address)": FunctionFragment;
     "performanceFee()": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
@@ -55,13 +60,15 @@ export interface FRTCInterface extends utils.Interface {
     "setHurdleRate(uint256)": FunctionFragment;
     "setManagementFeePerSecond(uint256)": FunctionFragment;
     "setMarketSpread(uint256)": FunctionFragment;
+    "setMinMaticDeposit(uint256)": FunctionFragment;
     "setPerformanceFee(uint256)": FunctionFragment;
-    "soldUnits(address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "symbol()": FunctionFragment;
+    "tokenPrice()": FunctionFragment;
     "totalSupply()": FunctionFragment;
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
+    "withdraw()": FunctionFragment;
   };
 
   getFunction(
@@ -70,21 +77,25 @@ export interface FRTCInterface extends utils.Interface {
       | "allowance"
       | "approve"
       | "balanceOf"
+      | "buy"
+      | "collectDeposits"
       | "decimals"
       | "decreaseAllowance"
       | "depositAddress"
-      | "deposits"
       | "feeOwner"
       | "getRoleAdmin"
       | "grantRole"
       | "hasRole"
       | "hurdleRate"
       | "increaseAllowance"
+      | "investmentsState"
+      | "liquidationsState"
       | "managementFeePerSecond"
       | "marketSpread"
+      | "minDeposit"
+      | "minWithdrawal"
+      | "mintPendingInvestments"
       | "name"
-      | "pendingInvestments"
-      | "pendingLiquidations"
       | "performanceFee"
       | "renounceRole"
       | "revokeRole"
@@ -93,13 +104,15 @@ export interface FRTCInterface extends utils.Interface {
       | "setHurdleRate"
       | "setManagementFeePerSecond"
       | "setMarketSpread"
+      | "setMinMaticDeposit"
       | "setPerformanceFee"
-      | "soldUnits"
       | "supportsInterface"
       | "symbol"
+      | "tokenPrice"
       | "totalSupply"
       | "transfer"
       | "transferFrom"
+      | "withdraw"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -115,6 +128,11 @@ export interface FRTCInterface extends utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(functionFragment: "buy", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "collectDeposits",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "decreaseAllowance",
@@ -124,7 +142,6 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "depositAddress",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "deposits", values: [string]): string;
   encodeFunctionData(functionFragment: "feeOwner", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "getRoleAdmin",
@@ -147,6 +164,14 @@ export interface FRTCInterface extends utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "investmentsState",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "liquidationsState",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "managementFeePerSecond",
     values?: undefined
   ): string;
@@ -154,15 +179,19 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "marketSpread",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "minDeposit",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "minWithdrawal",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "mintPendingInvestments",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "pendingInvestments",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "pendingLiquidations",
-    values: [string]
-  ): string;
   encodeFunctionData(
     functionFragment: "performanceFee",
     values?: undefined
@@ -193,15 +222,22 @@ export interface FRTCInterface extends utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "setMinMaticDeposit",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setPerformanceFee",
     values: [BigNumberish]
   ): string;
-  encodeFunctionData(functionFragment: "soldUnits", values: [string]): string;
   encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "tokenPrice",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "totalSupply",
     values?: undefined
@@ -214,6 +250,7 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "transferFrom",
     values: [string, string, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "withdraw", values?: undefined): string;
 
   decodeFunctionResult(
     functionFragment: "DEFAULT_ADMIN_ROLE",
@@ -222,6 +259,11 @@ export interface FRTCInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "allowance", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "buy", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "collectDeposits",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "decreaseAllowance",
@@ -231,7 +273,6 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "depositAddress",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "deposits", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "feeOwner", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getRoleAdmin",
@@ -245,6 +286,14 @@ export interface FRTCInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "investmentsState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "liquidationsState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "managementFeePerSecond",
     data: BytesLike
   ): Result;
@@ -252,15 +301,16 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "marketSpread",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "minDeposit", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "minWithdrawal",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "mintPendingInvestments",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "pendingInvestments",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "pendingLiquidations",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "performanceFee",
     data: BytesLike
@@ -291,15 +341,19 @@ export interface FRTCInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setMinMaticDeposit",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setPerformanceFee",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "soldUnits", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "tokenPrice", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "totalSupply",
     data: BytesLike
@@ -309,19 +363,26 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "transferFrom",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {
     "Approval(address,address,uint256)": EventFragment;
+    "DepositsCollected(uint256)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
     "RoleGranted(bytes32,address,address)": EventFragment;
     "RoleRevoked(bytes32,address,address)": EventFragment;
+    "TokenMinted()": EventFragment;
+    "TokenPurchaseRequested(address,uint256)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "DepositsCollected"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "TokenMinted"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "TokenPurchaseRequested"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
 }
 
@@ -336,6 +397,17 @@ export type ApprovalEvent = TypedEvent<
 >;
 
 export type ApprovalEventFilter = TypedEventFilter<ApprovalEvent>;
+
+export interface DepositsCollectedEventObject {
+  totalValue: BigNumber;
+}
+export type DepositsCollectedEvent = TypedEvent<
+  [BigNumber],
+  DepositsCollectedEventObject
+>;
+
+export type DepositsCollectedEventFilter =
+  TypedEventFilter<DepositsCollectedEvent>;
 
 export interface RoleAdminChangedEventObject {
   role: string;
@@ -373,6 +445,23 @@ export type RoleRevokedEvent = TypedEvent<
 >;
 
 export type RoleRevokedEventFilter = TypedEventFilter<RoleRevokedEvent>;
+
+export interface TokenMintedEventObject {}
+export type TokenMintedEvent = TypedEvent<[], TokenMintedEventObject>;
+
+export type TokenMintedEventFilter = TypedEventFilter<TokenMintedEvent>;
+
+export interface TokenPurchaseRequestedEventObject {
+  from: string;
+  value: BigNumber;
+}
+export type TokenPurchaseRequestedEvent = TypedEvent<
+  [string, BigNumber],
+  TokenPurchaseRequestedEventObject
+>;
+
+export type TokenPurchaseRequestedEventFilter =
+  TypedEventFilter<TokenPurchaseRequestedEvent>;
 
 export interface TransferEventObject {
   from: string;
@@ -429,6 +518,14 @@ export interface FRTC extends BaseContract {
 
     balanceOf(account: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    buy(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    collectDeposits(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     decimals(overrides?: CallOverrides): Promise<[number]>;
 
     decreaseAllowance(
@@ -438,8 +535,6 @@ export interface FRTC extends BaseContract {
     ): Promise<ContractTransaction>;
 
     depositAddress(overrides?: CallOverrides): Promise<[string]>;
-
-    deposits(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     feeOwner(overrides?: CallOverrides): Promise<[string]>;
 
@@ -465,21 +560,24 @@ export interface FRTC extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    investmentsState(overrides?: CallOverrides): Promise<[number]>;
+
+    liquidationsState(overrides?: CallOverrides): Promise<[number]>;
+
     managementFeePerSecond(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     marketSpread(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    minDeposit(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    minWithdrawal(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    mintPendingInvestments(
+      _tokenEntryPrice: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     name(overrides?: CallOverrides): Promise<[string]>;
-
-    pendingInvestments(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    pendingLiquidations(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
 
     performanceFee(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -520,12 +618,15 @@ export interface FRTC extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setMinMaticDeposit(
+      _minDeposit: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setPerformanceFee(
       _performanceFee: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    soldUnits(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -533,6 +634,8 @@ export interface FRTC extends BaseContract {
     ): Promise<[boolean]>;
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
+
+    tokenPrice(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     totalSupply(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -546,6 +649,10 @@ export interface FRTC extends BaseContract {
       from: string,
       to: string,
       amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -566,6 +673,14 @@ export interface FRTC extends BaseContract {
 
   balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+  buy(
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  collectDeposits(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   decimals(overrides?: CallOverrides): Promise<number>;
 
   decreaseAllowance(
@@ -575,8 +690,6 @@ export interface FRTC extends BaseContract {
   ): Promise<ContractTransaction>;
 
   depositAddress(overrides?: CallOverrides): Promise<string>;
-
-  deposits(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   feeOwner(overrides?: CallOverrides): Promise<string>;
 
@@ -602,21 +715,24 @@ export interface FRTC extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  investmentsState(overrides?: CallOverrides): Promise<number>;
+
+  liquidationsState(overrides?: CallOverrides): Promise<number>;
+
   managementFeePerSecond(overrides?: CallOverrides): Promise<BigNumber>;
 
   marketSpread(overrides?: CallOverrides): Promise<BigNumber>;
 
+  minDeposit(overrides?: CallOverrides): Promise<BigNumber>;
+
+  minWithdrawal(overrides?: CallOverrides): Promise<BigNumber>;
+
+  mintPendingInvestments(
+    _tokenEntryPrice: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   name(overrides?: CallOverrides): Promise<string>;
-
-  pendingInvestments(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  pendingLiquidations(
-    arg0: string,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
 
   performanceFee(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -657,12 +773,15 @@ export interface FRTC extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setMinMaticDeposit(
+    _minDeposit: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setPerformanceFee(
     _performanceFee: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
-
-  soldUnits(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   supportsInterface(
     interfaceId: BytesLike,
@@ -670,6 +789,8 @@ export interface FRTC extends BaseContract {
   ): Promise<boolean>;
 
   symbol(overrides?: CallOverrides): Promise<string>;
+
+  tokenPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
   totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -683,6 +804,10 @@ export interface FRTC extends BaseContract {
     from: string,
     to: string,
     amount: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  withdraw(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -703,6 +828,10 @@ export interface FRTC extends BaseContract {
 
     balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    buy(overrides?: CallOverrides): Promise<void>;
+
+    collectDeposits(overrides?: CallOverrides): Promise<void>;
+
     decimals(overrides?: CallOverrides): Promise<number>;
 
     decreaseAllowance(
@@ -712,8 +841,6 @@ export interface FRTC extends BaseContract {
     ): Promise<boolean>;
 
     depositAddress(overrides?: CallOverrides): Promise<string>;
-
-    deposits(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     feeOwner(overrides?: CallOverrides): Promise<string>;
 
@@ -739,21 +866,24 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    investmentsState(overrides?: CallOverrides): Promise<number>;
+
+    liquidationsState(overrides?: CallOverrides): Promise<number>;
+
     managementFeePerSecond(overrides?: CallOverrides): Promise<BigNumber>;
 
     marketSpread(overrides?: CallOverrides): Promise<BigNumber>;
 
+    minDeposit(overrides?: CallOverrides): Promise<BigNumber>;
+
+    minWithdrawal(overrides?: CallOverrides): Promise<BigNumber>;
+
+    mintPendingInvestments(
+      _tokenEntryPrice: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     name(overrides?: CallOverrides): Promise<string>;
-
-    pendingInvestments(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    pendingLiquidations(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     performanceFee(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -791,12 +921,15 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setMinMaticDeposit(
+      _minDeposit: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setPerformanceFee(
       _performanceFee: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    soldUnits(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -804,6 +937,8 @@ export interface FRTC extends BaseContract {
     ): Promise<boolean>;
 
     symbol(overrides?: CallOverrides): Promise<string>;
+
+    tokenPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -819,6 +954,8 @@ export interface FRTC extends BaseContract {
       amount: BigNumberish,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    withdraw(overrides?: CallOverrides): Promise<void>;
   };
 
   filters: {
@@ -832,6 +969,11 @@ export interface FRTC extends BaseContract {
       spender?: string | null,
       value?: null
     ): ApprovalEventFilter;
+
+    "DepositsCollected(uint256)"(
+      totalValue?: null
+    ): DepositsCollectedEventFilter;
+    DepositsCollected(totalValue?: null): DepositsCollectedEventFilter;
 
     "RoleAdminChanged(bytes32,bytes32,bytes32)"(
       role?: BytesLike | null,
@@ -866,6 +1008,18 @@ export interface FRTC extends BaseContract {
       sender?: string | null
     ): RoleRevokedEventFilter;
 
+    "TokenMinted()"(): TokenMintedEventFilter;
+    TokenMinted(): TokenMintedEventFilter;
+
+    "TokenPurchaseRequested(address,uint256)"(
+      from?: string | null,
+      value?: null
+    ): TokenPurchaseRequestedEventFilter;
+    TokenPurchaseRequested(
+      from?: string | null,
+      value?: null
+    ): TokenPurchaseRequestedEventFilter;
+
     "Transfer(address,address,uint256)"(
       from?: string | null,
       to?: string | null,
@@ -895,6 +1049,14 @@ export interface FRTC extends BaseContract {
 
     balanceOf(account: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    buy(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    collectDeposits(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     decimals(overrides?: CallOverrides): Promise<BigNumber>;
 
     decreaseAllowance(
@@ -904,8 +1066,6 @@ export interface FRTC extends BaseContract {
     ): Promise<BigNumber>;
 
     depositAddress(overrides?: CallOverrides): Promise<BigNumber>;
-
-    deposits(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     feeOwner(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -934,21 +1094,24 @@ export interface FRTC extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    investmentsState(overrides?: CallOverrides): Promise<BigNumber>;
+
+    liquidationsState(overrides?: CallOverrides): Promise<BigNumber>;
+
     managementFeePerSecond(overrides?: CallOverrides): Promise<BigNumber>;
 
     marketSpread(overrides?: CallOverrides): Promise<BigNumber>;
 
+    minDeposit(overrides?: CallOverrides): Promise<BigNumber>;
+
+    minWithdrawal(overrides?: CallOverrides): Promise<BigNumber>;
+
+    mintPendingInvestments(
+      _tokenEntryPrice: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     name(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pendingInvestments(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    pendingLiquidations(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     performanceFee(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -989,12 +1152,15 @@ export interface FRTC extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setMinMaticDeposit(
+      _minDeposit: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setPerformanceFee(
       _performanceFee: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    soldUnits(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     supportsInterface(
       interfaceId: BytesLike,
@@ -1002,6 +1168,8 @@ export interface FRTC extends BaseContract {
     ): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
+
+    tokenPrice(overrides?: CallOverrides): Promise<BigNumber>;
 
     totalSupply(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1015,6 +1183,10 @@ export interface FRTC extends BaseContract {
       from: string,
       to: string,
       amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -1041,6 +1213,14 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    buy(
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    collectDeposits(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     decreaseAllowance(
@@ -1050,11 +1230,6 @@ export interface FRTC extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     depositAddress(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    deposits(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     feeOwner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1083,23 +1258,26 @@ export interface FRTC extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    investmentsState(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    liquidationsState(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     managementFeePerSecond(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     marketSpread(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    minDeposit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    minWithdrawal(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    mintPendingInvestments(
+      _tokenEntryPrice: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     name(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pendingInvestments(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    pendingLiquidations(
-      arg0: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     performanceFee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1140,14 +1318,14 @@ export interface FRTC extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setPerformanceFee(
-      _performanceFee: BigNumberish,
+    setMinMaticDeposit(
+      _minDeposit: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    soldUnits(
-      arg0: string,
-      overrides?: CallOverrides
+    setPerformanceFee(
+      _performanceFee: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     supportsInterface(
@@ -1156,6 +1334,8 @@ export interface FRTC extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    tokenPrice(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     totalSupply(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1169,6 +1349,10 @@ export interface FRTC extends BaseContract {
       from: string,
       to: string,
       amount: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    withdraw(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
