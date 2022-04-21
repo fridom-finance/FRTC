@@ -85,6 +85,7 @@ contract FRTC is ERC20, CustodialMarket {
             investors[iwpl].pendingLiquidations = 0;
             investorsWithPendingLiquidations.pop();
         }
+        _burn(address(this), totalAmountToLiquidate);
         totalAmountToLiquidate = 0;
         tokenPrice = _tokenExitPrice;
         liquidationState = LiquidationStates.PendingPreparation;
