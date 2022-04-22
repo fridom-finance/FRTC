@@ -3,6 +3,7 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./CustodialMarket.sol";
+import "./Math.sol";
 
 contract FRTC is ERC20, CustodialMarket {
     /* Structs */
@@ -15,23 +16,26 @@ contract FRTC is ERC20, CustodialMarket {
     /* Storage */
 
     uint256 public managementFeePerSecond; // Divide by 10¹⁴ to get raw managementFeePerSecond
-    mapping(address => Holder) private holders; // Address to their holder info
+    uint256 public kReducer;
+    mapping(address => Holder) public holders; // Address to their holder info
 
     /* Constructor */
 
     constructor(
-        uint256 _marketSpread,
-        uint256 _minDeposit,
-        uint256 _minWithdrawal,
         address _defaultAdmin,
         address _feeOwner,
         address _depositAddress,
-        uint256 _managementFeePerSecond
+        uint256 _marketSpread,
+        uint256 _managementFeePerSecond,
+        uint256 _kReducer,
+        uint256 _minDeposit,
+        uint256 _minWithdrawal
     ) ERC20("Fridom Top Currencies", "FRTC") {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         feeOwner = _feeOwner;
         depositAddress = _depositAddress;
         managementFeePerSecond = _managementFeePerSecond;
+        kReducer = _kReducer;
         marketSpread = _marketSpread;
         minDeposit = _minDeposit;
         minWithdrawal = _minWithdrawal;
@@ -106,7 +110,7 @@ contract FRTC is ERC20, CustodialMarket {
         if (holders[account].lastFeeCharge == 0 || holders[account].isFreeOfFees) return super.balanceOf(account);
         uint256 secondsElapsed = block.timestamp - holders[account].lastFeeCharge;
         uint256 q = (10**14) / managementFeePerSecond;
-        return fracExpNeg(super.balanceOf(account), q, secondsElapsed, 6);
+        return kReducer * Math.fracExpNeg(super.balanceOf(account) / kReducer, q, secondsElapsed, 6);
     }
 
     function _beforeTokenTransfer(
@@ -131,28 +135,7 @@ contract FRTC is ERC20, CustodialMarket {
         holders[_holder].isFreeOfFees = _newValue;
     }
 
-    // Utils
-
-    /**
-     * Computes k * (1 - 1/q) ^ N using p terms from the binomial expansion
-     * keep p<=8, <=6 if N or q are in the order of 10⁸
-     */
-    function fracExpNeg(
-        uint256 k,
-        uint256 q,
-        uint256 n,
-        uint256 p
-    ) internal pure returns (uint256) {
-        uint256 s = 0;
-        uint256 N = 1;
-        uint256 B = 1;
-        for (uint256 i = 0; i < p; i++) {
-            uint256 bterm = (k * N) / B / (q**i);
-            if (i % 2 == 0) s += bterm;
-            else s -= bterm;
-            N = N * (n - i);
-            B = B * (i + 1);
-        }
-        return s;
+    function setKReducer(uint256 _kReducer) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        kReducer = _kReducer;
     }
 }

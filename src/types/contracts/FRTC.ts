@@ -43,8 +43,10 @@ export interface FRTCInterface extends utils.Interface {
     "getRoleAdmin(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
+    "holders(address)": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
     "investmentState()": FunctionFragment;
+    "kReducer()": FunctionFragment;
     "liquidate(uint256)": FunctionFragment;
     "liquidationState()": FunctionFragment;
     "managementFeePerSecond()": FunctionFragment;
@@ -60,6 +62,7 @@ export interface FRTCInterface extends utils.Interface {
     "setDepositAddress(address)": FunctionFragment;
     "setFeeOwner(address)": FunctionFragment;
     "setHolderFreeOfFees(address,bool)": FunctionFragment;
+    "setKReducer(uint256)": FunctionFragment;
     "setManagementFeePerSecond(uint256)": FunctionFragment;
     "setMarketSpread(uint256)": FunctionFragment;
     "setMinDeposit(uint256)": FunctionFragment;
@@ -91,8 +94,10 @@ export interface FRTCInterface extends utils.Interface {
       | "getRoleAdmin"
       | "grantRole"
       | "hasRole"
+      | "holders"
       | "increaseAllowance"
       | "investmentState"
+      | "kReducer"
       | "liquidate"
       | "liquidationState"
       | "managementFeePerSecond"
@@ -108,6 +113,7 @@ export interface FRTCInterface extends utils.Interface {
       | "setDepositAddress"
       | "setFeeOwner"
       | "setHolderFreeOfFees"
+      | "setKReducer"
       | "setManagementFeePerSecond"
       | "setMarketSpread"
       | "setMinDeposit"
@@ -167,6 +173,7 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "hasRole",
     values: [BytesLike, string]
   ): string;
+  encodeFunctionData(functionFragment: "holders", values: [string]): string;
   encodeFunctionData(
     functionFragment: "increaseAllowance",
     values: [string, BigNumberish]
@@ -175,6 +182,7 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "investmentState",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "kReducer", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "liquidate",
     values: [BigNumberish]
@@ -225,6 +233,10 @@ export interface FRTCInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "setHolderFreeOfFees",
     values: [string, boolean]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setKReducer",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setManagementFeePerSecond",
@@ -305,6 +317,7 @@ export interface FRTCInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "holders", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "increaseAllowance",
     data: BytesLike
@@ -313,6 +326,7 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "investmentState",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "kReducer", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "liquidate", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "liquidationState",
@@ -356,6 +370,10 @@ export interface FRTCInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setHolderFreeOfFees",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setKReducer",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -633,6 +651,13 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
 
+    holders(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, boolean] & { lastFeeCharge: BigNumber; isFreeOfFees: boolean }
+    >;
+
     increaseAllowance(
       spender: string,
       addedValue: BigNumberish,
@@ -640,6 +665,8 @@ export interface FRTC extends BaseContract {
     ): Promise<ContractTransaction>;
 
     investmentState(overrides?: CallOverrides): Promise<[number]>;
+
+    kReducer(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     liquidate(
       _tokenExitPrice: BigNumberish,
@@ -697,6 +724,11 @@ export interface FRTC extends BaseContract {
     setHolderFreeOfFees(
       _holder: string,
       _newValue: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setKReducer(
+      _kReducer: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -811,6 +843,13 @@ export interface FRTC extends BaseContract {
     overrides?: CallOverrides
   ): Promise<boolean>;
 
+  holders(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, boolean] & { lastFeeCharge: BigNumber; isFreeOfFees: boolean }
+  >;
+
   increaseAllowance(
     spender: string,
     addedValue: BigNumberish,
@@ -818,6 +857,8 @@ export interface FRTC extends BaseContract {
   ): Promise<ContractTransaction>;
 
   investmentState(overrides?: CallOverrides): Promise<number>;
+
+  kReducer(overrides?: CallOverrides): Promise<BigNumber>;
 
   liquidate(
     _tokenExitPrice: BigNumberish,
@@ -875,6 +916,11 @@ export interface FRTC extends BaseContract {
   setHolderFreeOfFees(
     _holder: string,
     _newValue: boolean,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setKReducer(
+    _kReducer: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -985,6 +1031,13 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
+    holders(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, boolean] & { lastFeeCharge: BigNumber; isFreeOfFees: boolean }
+    >;
+
     increaseAllowance(
       spender: string,
       addedValue: BigNumberish,
@@ -992,6 +1045,8 @@ export interface FRTC extends BaseContract {
     ): Promise<boolean>;
 
     investmentState(overrides?: CallOverrides): Promise<number>;
+
+    kReducer(overrides?: CallOverrides): Promise<BigNumber>;
 
     liquidate(
       _tokenExitPrice: BigNumberish,
@@ -1041,6 +1096,11 @@ export interface FRTC extends BaseContract {
     setHolderFreeOfFees(
       _holder: string,
       _newValue: boolean,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setKReducer(
+      _kReducer: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1248,6 +1308,8 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    holders(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
     increaseAllowance(
       spender: string,
       addedValue: BigNumberish,
@@ -1255,6 +1317,8 @@ export interface FRTC extends BaseContract {
     ): Promise<BigNumber>;
 
     investmentState(overrides?: CallOverrides): Promise<BigNumber>;
+
+    kReducer(overrides?: CallOverrides): Promise<BigNumber>;
 
     liquidate(
       _tokenExitPrice: BigNumberish,
@@ -1312,6 +1376,11 @@ export interface FRTC extends BaseContract {
     setHolderFreeOfFees(
       _holder: string,
       _newValue: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setKReducer(
+      _kReducer: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1435,6 +1504,11 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    holders(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     increaseAllowance(
       spender: string,
       addedValue: BigNumberish,
@@ -1442,6 +1516,8 @@ export interface FRTC extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     investmentState(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    kReducer(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     liquidate(
       _tokenExitPrice: BigNumberish,
@@ -1501,6 +1577,11 @@ export interface FRTC extends BaseContract {
     setHolderFreeOfFees(
       _holder: string,
       _newValue: boolean,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setKReducer(
+      _kReducer: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

@@ -4,3 +4,4 @@
 export type { CustodialMarket } from "./CustodialMarket";
 export type { FRTC } from "./FRTC";
 export type { Greeter } from "./Greeter";
+export type { MathTester } from "./MathTester";
