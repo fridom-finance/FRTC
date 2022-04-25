@@ -54,7 +54,7 @@ contract FRTC is ERC20, CustodialMarket {
         onlyInvestmentState(InvestmentStates.PendingInvestment)
     {
         for (uint256 i = investorsWithPendingInvestments.length; i > 0; i--) {
-            address iwpi = investorsWithPendingInvestments[i];
+            address iwpi = investorsWithPendingInvestments[i - 1];
             uint256 amountToMint = (investors[iwpi].pendingInvestments * (10**18)) / _tokenEntryPrice;
             _mint(iwpi, amountToMint);
             investors[iwpi].pendingInvestments = 0;
@@ -84,7 +84,7 @@ contract FRTC is ERC20, CustodialMarket {
         uint256 liquidationPrice = ((_tokenExitPrice) * (2000000 - marketSpread)) / 2000000;
         investors[feeOwner].pendingWithdrawals += (_tokenExitPrice - liquidationPrice) * totalAmountToLiquidate;
         for (uint256 i = investorsWithPendingLiquidations.length; i > 0; i--) {
-            address iwpl = investorsWithPendingLiquidations[i];
+            address iwpl = investorsWithPendingLiquidations[i - 1];
             investors[iwpl].pendingWithdrawals += liquidationPrice * investors[iwpl].pendingLiquidations;
             investors[iwpl].pendingLiquidations = 0;
             investorsWithPendingLiquidations.pop();
@@ -108,9 +108,14 @@ contract FRTC is ERC20, CustodialMarket {
 
     function balanceOf(address account) public view override returns (uint256) {
         if (holders[account].lastFeeCharge == 0 || holders[account].isFreeOfFees) return super.balanceOf(account);
-        uint256 secondsElapsed = block.timestamp - holders[account].lastFeeCharge;
+        uint256 p = 6;
         uint256 q = (10**14) / managementFeePerSecond;
-        return kReducer * Math.fracExpNeg(super.balanceOf(account) / kReducer, q, secondsElapsed, 6);
+        uint256 secondsElapsed = block.timestamp - holders[account].lastFeeCharge;
+        if (secondsElapsed < p) {
+            return super.balanceOf(account);
+        } else {
+            return kReducer * Math.fracExpNeg(super.balanceOf(account) / kReducer, q, secondsElapsed, p);
+        }
     }
 
     function _beforeTokenTransfer(
@@ -118,7 +123,7 @@ contract FRTC is ERC20, CustodialMarket {
         address to,
         uint256 amount
     ) internal override {
-        if (to != feeOwner) {
+        if (to != feeOwner && from != address(0) && to != address(0)) {
             // too ugly?
             takeManagementFee(from);
             takeManagementFee(to);

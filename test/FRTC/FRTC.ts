@@ -7,7 +7,11 @@ import type { Artifact } from "hardhat/types";
 import type { FRTC } from "../../src/types/contracts/FRTC";
 import type { MathTester } from "../../src/types/contracts/MathTester";
 import { Signers } from "../types";
-import { shouldHaveUpdatableStateVariables, shouldReceiveDepositsAndMintTokens } from "./FRTC.behavior";
+import {
+  shouldHaveUpdatableStateVariables,
+  shouldReceiveDepositsAndMintTokens,
+  shouldTransferTokensAndTakeManagementFee,
+} from "./FRTC.behavior";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -61,6 +65,7 @@ describe("Unit tests", function () {
 
     shouldHaveUpdatableStateVariables();
     shouldReceiveDepositsAndMintTokens();
+    shouldTransferTokensAndTakeManagementFee();
   });
 
   describe("Math", function () {

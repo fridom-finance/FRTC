@@ -75,7 +75,7 @@ contract CustodialMarket is AccessControl {
 
     /* Functions */
 
-    function buy() external payable {
+    function buy() public payable {
         require(msg.value >= minDeposit, "Not enough deposit");
         uint256 fee = (msg.value * marketSpread) / 2000000;
         if (investors[msg.sender].deposits == 0) {
@@ -184,5 +184,10 @@ contract CustodialMarket is AccessControl {
 
     function setMarketSpread(uint256 _marketSpread) external onlyRole(DEFAULT_ADMIN_ROLE) {
         marketSpread = _marketSpread;
+    }
+
+    // Receive
+    receive() external payable {
+        buy();
     }
 }
