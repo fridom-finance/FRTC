@@ -40,12 +40,14 @@ export interface FRTCInterface extends utils.Interface {
     "depositAddress()": FunctionFragment;
     "feeOwner()": FunctionFragment;
     "getAccruedFees(address)": FunctionFragment;
+    "getInvestorsState()": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
     "holders(address)": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
     "investmentState()": FunctionFragment;
+    "investors(address)": FunctionFragment;
     "kReducer()": FunctionFragment;
     "liquidate(uint256)": FunctionFragment;
     "liquidationState()": FunctionFragment;
@@ -91,12 +93,14 @@ export interface FRTCInterface extends utils.Interface {
       | "depositAddress"
       | "feeOwner"
       | "getAccruedFees"
+      | "getInvestorsState"
       | "getRoleAdmin"
       | "grantRole"
       | "hasRole"
       | "holders"
       | "increaseAllowance"
       | "investmentState"
+      | "investors"
       | "kReducer"
       | "liquidate"
       | "liquidationState"
@@ -162,6 +166,10 @@ export interface FRTCInterface extends utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(
+    functionFragment: "getInvestorsState",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getRoleAdmin",
     values: [BytesLike]
   ): string;
@@ -182,6 +190,7 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "investmentState",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "investors", values: [string]): string;
   encodeFunctionData(functionFragment: "kReducer", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "liquidate",
@@ -312,6 +321,10 @@ export interface FRTCInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getInvestorsState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getRoleAdmin",
     data: BytesLike
   ): Result;
@@ -326,6 +339,7 @@ export interface FRTCInterface extends utils.Interface {
     functionFragment: "investmentState",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "investors", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "kReducer", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "liquidate", data: BytesLike): Result;
   decodeFunctionResult(
@@ -637,6 +651,10 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { accrued: BigNumber }>;
 
+    getInvestorsState(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<[string]>;
 
     grantRole(
@@ -665,6 +683,19 @@ export interface FRTC extends BaseContract {
     ): Promise<ContractTransaction>;
 
     investmentState(overrides?: CallOverrides): Promise<[number]>;
+
+    investors(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        deposits: BigNumber;
+        pendingInvestments: BigNumber;
+        tokensToSell: BigNumber;
+        pendingLiquidations: BigNumber;
+        pendingWithdrawals: BigNumber;
+      }
+    >;
 
     kReducer(overrides?: CallOverrides): Promise<[BigNumber]>;
 
@@ -829,6 +860,10 @@ export interface FRTC extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  getInvestorsState(
+    overrides?: CallOverrides
+  ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+
   getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
   grantRole(
@@ -857,6 +892,19 @@ export interface FRTC extends BaseContract {
   ): Promise<ContractTransaction>;
 
   investmentState(overrides?: CallOverrides): Promise<number>;
+
+  investors(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      deposits: BigNumber;
+      pendingInvestments: BigNumber;
+      tokensToSell: BigNumber;
+      pendingLiquidations: BigNumber;
+      pendingWithdrawals: BigNumber;
+    }
+  >;
 
   kReducer(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1017,6 +1065,10 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getInvestorsState(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
     grantRole(
@@ -1045,6 +1097,19 @@ export interface FRTC extends BaseContract {
     ): Promise<boolean>;
 
     investmentState(overrides?: CallOverrides): Promise<number>;
+
+    investors(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        deposits: BigNumber;
+        pendingInvestments: BigNumber;
+        tokensToSell: BigNumber;
+        pendingLiquidations: BigNumber;
+        pendingWithdrawals: BigNumber;
+      }
+    >;
 
     kReducer(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1291,6 +1356,8 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    getInvestorsState(overrides?: CallOverrides): Promise<BigNumber>;
+
     getRoleAdmin(
       role: BytesLike,
       overrides?: CallOverrides
@@ -1317,6 +1384,8 @@ export interface FRTC extends BaseContract {
     ): Promise<BigNumber>;
 
     investmentState(overrides?: CallOverrides): Promise<BigNumber>;
+
+    investors(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     kReducer(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1487,6 +1556,8 @@ export interface FRTC extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    getInvestorsState(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     getRoleAdmin(
       role: BytesLike,
       overrides?: CallOverrides
@@ -1516,6 +1587,11 @@ export interface FRTC extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     investmentState(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    investors(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     kReducer(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

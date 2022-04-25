@@ -34,10 +34,12 @@ export interface CustodialMarketInterface extends utils.Interface {
     "collectDeposits()": FunctionFragment;
     "depositAddress()": FunctionFragment;
     "feeOwner()": FunctionFragment;
+    "getInvestorsState()": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
     "investmentState()": FunctionFragment;
+    "investors(address)": FunctionFragment;
     "liquidate(uint256)": FunctionFragment;
     "liquidationState()": FunctionFragment;
     "marketSpread()": FunctionFragment;
@@ -66,10 +68,12 @@ export interface CustodialMarketInterface extends utils.Interface {
       | "collectDeposits"
       | "depositAddress"
       | "feeOwner"
+      | "getInvestorsState"
       | "getRoleAdmin"
       | "grantRole"
       | "hasRole"
       | "investmentState"
+      | "investors"
       | "liquidate"
       | "liquidationState"
       | "marketSpread"
@@ -106,6 +110,10 @@ export interface CustodialMarketInterface extends utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "feeOwner", values?: undefined): string;
   encodeFunctionData(
+    functionFragment: "getInvestorsState",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getRoleAdmin",
     values: [BytesLike]
   ): string;
@@ -121,6 +129,7 @@ export interface CustodialMarketInterface extends utils.Interface {
     functionFragment: "investmentState",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "investors", values: [string]): string;
   encodeFunctionData(
     functionFragment: "liquidate",
     values: [BigNumberish]
@@ -204,6 +213,10 @@ export interface CustodialMarketInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "feeOwner", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "getInvestorsState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getRoleAdmin",
     data: BytesLike
   ): Result;
@@ -213,6 +226,7 @@ export interface CustodialMarketInterface extends utils.Interface {
     functionFragment: "investmentState",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "investors", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "liquidate", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "liquidationState",
@@ -437,6 +451,10 @@ export interface CustodialMarket extends BaseContract {
 
     feeOwner(overrides?: CallOverrides): Promise<[string]>;
 
+    getInvestorsState(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<[string]>;
 
     grantRole(
@@ -452,6 +470,19 @@ export interface CustodialMarket extends BaseContract {
     ): Promise<[boolean]>;
 
     investmentState(overrides?: CallOverrides): Promise<[number]>;
+
+    investors(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        deposits: BigNumber;
+        pendingInvestments: BigNumber;
+        tokensToSell: BigNumber;
+        pendingLiquidations: BigNumber;
+        pendingWithdrawals: BigNumber;
+      }
+    >;
 
     liquidate(
       _exitPrice: BigNumberish,
@@ -545,6 +576,10 @@ export interface CustodialMarket extends BaseContract {
 
   feeOwner(overrides?: CallOverrides): Promise<string>;
 
+  getInvestorsState(
+    overrides?: CallOverrides
+  ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+
   getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
   grantRole(
@@ -560,6 +595,19 @@ export interface CustodialMarket extends BaseContract {
   ): Promise<boolean>;
 
   investmentState(overrides?: CallOverrides): Promise<number>;
+
+  investors(
+    arg0: string,
+    overrides?: CallOverrides
+  ): Promise<
+    [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+      deposits: BigNumber;
+      pendingInvestments: BigNumber;
+      tokensToSell: BigNumber;
+      pendingLiquidations: BigNumber;
+      pendingWithdrawals: BigNumber;
+    }
+  >;
 
   liquidate(
     _exitPrice: BigNumberish,
@@ -649,6 +697,10 @@ export interface CustodialMarket extends BaseContract {
 
     feeOwner(overrides?: CallOverrides): Promise<string>;
 
+    getInvestorsState(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber, BigNumber, BigNumber, BigNumber]>;
+
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
     grantRole(
@@ -664,6 +716,19 @@ export interface CustodialMarket extends BaseContract {
     ): Promise<boolean>;
 
     investmentState(overrides?: CallOverrides): Promise<number>;
+
+    investors(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber, BigNumber] & {
+        deposits: BigNumber;
+        pendingInvestments: BigNumber;
+        tokensToSell: BigNumber;
+        pendingLiquidations: BigNumber;
+        pendingWithdrawals: BigNumber;
+      }
+    >;
 
     liquidate(
       _exitPrice: BigNumberish,
@@ -817,6 +882,8 @@ export interface CustodialMarket extends BaseContract {
 
     feeOwner(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getInvestorsState(overrides?: CallOverrides): Promise<BigNumber>;
+
     getRoleAdmin(
       role: BytesLike,
       overrides?: CallOverrides
@@ -835,6 +902,8 @@ export interface CustodialMarket extends BaseContract {
     ): Promise<BigNumber>;
 
     investmentState(overrides?: CallOverrides): Promise<BigNumber>;
+
+    investors(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     liquidate(
       _exitPrice: BigNumberish,
@@ -931,6 +1000,8 @@ export interface CustodialMarket extends BaseContract {
 
     feeOwner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    getInvestorsState(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     getRoleAdmin(
       role: BytesLike,
       overrides?: CallOverrides
@@ -949,6 +1020,11 @@ export interface CustodialMarket extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     investmentState(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    investors(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     liquidate(
       _exitPrice: BigNumberish,

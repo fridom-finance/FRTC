@@ -1,5 +1,6 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
+import { ethers } from "hardhat";
 
 export function shouldHaveUpdatableStateVariables(): void {
   it("Should set a new market spread only by admin", async function () {
@@ -44,5 +45,80 @@ export function shouldHaveUpdatableStateVariables(): void {
     await this.frtc.connect(this.signers.admin).setHolderFreeOfFees(nonAdminAddress, true);
     expect((await this.frtc.holders(nonAdminAddress)).isFreeOfFees).to.equal(true);
     await expect(this.frtc.connect(this.signers.nonAdmin).setHolderFreeOfFees(nonAdminAddress, true)).to.be.reverted;
+  });
+}
+
+//expect(await this.frtc.balanceOf(await this.signers.feeOwner.getAddress())).to.equal(BigNumber.from(0));
+export function shouldReceiveDepositsAndMintTokens(): void {
+  it("Should receive a new deposit and change state variables", async function () {
+    const defaultBalance: BigNumber = BigNumber.from(10).pow(18).mul(10000);
+    const zero: BigNumber = BigNumber.from(0);
+
+    expect(await ethers.provider.getBalance(this.frtc.address)).to.equal(zero);
+    expect(await this.signers.nonAdmin.getBalance()).to.equal(defaultBalance);
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).deposits).to.equal(zero);
+    expect((await this.frtc.investors(this.signers.feeOwner.address)).pendingWithdrawals).to.equal(zero);
+    let investorsState = await this.frtc.getInvestorsState();
+    expect(investorsState[0]).to.equal(zero);
+    expect(investorsState[1]).to.equal(zero);
+    expect(investorsState[2]).to.equal(zero);
+    expect(investorsState[3]).to.equal(zero);
+
+    const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(100);
+    const marketSpread: BigNumber = BigNumber.from(10000);
+    const feeTaken: BigNumber = amountToDeposit.mul(marketSpread).div(BigNumber.from(10).pow(6).mul(2));
+
+    await this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit });
+
+    expect(await ethers.provider.getBalance(this.frtc.address)).to.equal(amountToDeposit);
+    expect((await this.frtc.investors(this.signers.feeOwner.address)).pendingWithdrawals).to.equal(feeTaken);
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).deposits).to.equal(amountToDeposit.sub(feeTaken));
+    expect(await this.signers.nonAdmin.getBalance()).to.lt(defaultBalance.sub(amountToDeposit));
+    investorsState = await this.frtc.getInvestorsState();
+    expect(investorsState[0]).to.equal(BigNumber.from(1));
+    expect(investorsState[1]).to.equal(zero);
+    expect(investorsState[2]).to.equal(zero);
+    expect(investorsState[3]).to.equal(zero);
+  });
+
+  it("Should fail on deposit lower than minimum", async function () {
+    const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(99);
+    await expect(this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit })).to.be.reverted;
+  });
+
+  it("Should collect all deposits only by admin and change state variables", async function () {
+    const defaultBalance: BigNumber = BigNumber.from(10).pow(18).mul(10000);
+    const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(150);
+    const amountToDeposit2: BigNumber = BigNumber.from(10).pow(18).mul(200);
+    const marketSpread: BigNumber = BigNumber.from(10000);
+    const feeTaken: BigNumber = amountToDeposit.mul(marketSpread).div(BigNumber.from(10).pow(6).mul(2));
+    const feeTaken2: BigNumber = amountToDeposit2.mul(marketSpread).div(BigNumber.from(10).pow(6).mul(2));
+    const zero: BigNumber = BigNumber.from(0);
+    const totalDeposits: BigNumber = amountToDeposit.add(amountToDeposit2).sub(feeTaken).sub(feeTaken2);
+
+    await this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit });
+    await this.frtc.connect(this.signers.nonAdmin2).buy({ value: amountToDeposit2 });
+    await expect(this.frtc.connect(this.signers.nonAdmin).collectDeposits()).to.be.reverted;
+    await expect(this.frtc.connect(this.signers.admin).collectDeposits())
+      .to.emit(this.frtc, "DepositsCollected")
+      .withArgs(totalDeposits);
+
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).deposits).to.equal(zero);
+    expect((await this.frtc.investors(this.signers.nonAdmin2.address)).deposits).to.equal(zero);
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).pendingInvestments).to.equal(
+      amountToDeposit.sub(feeTaken),
+    );
+    expect((await this.frtc.investors(this.signers.nonAdmin2.address)).pendingInvestments).to.equal(
+      amountToDeposit2.sub(feeTaken2),
+    );
+    expect((await this.frtc.investors(this.signers.feeOwner.address)).pendingWithdrawals).to.equal(
+      feeTaken.add(feeTaken2),
+    );
+    let investorsState = await this.frtc.getInvestorsState();
+    expect(investorsState[0]).to.equal(zero);
+    expect(investorsState[1]).to.equal(BigNumber.from(2));
+    expect(investorsState[2]).to.equal(zero);
+    expect(investorsState[3]).to.equal(zero);
+    expect(await this.signers.depositAddress.getBalance()).to.equal(totalDeposits.add(defaultBalance));
   });
 }

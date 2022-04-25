@@ -53,7 +53,7 @@ contract FRTC is ERC20, CustodialMarket {
         onlyRole(DEFAULT_ADMIN_ROLE)
         onlyInvestmentState(InvestmentStates.PendingInvestment)
     {
-        for (uint256 i = investorsWithPendingInvestments.length - 1; i >= 0; i--) {
+        for (uint256 i = investorsWithPendingInvestments.length; i > 0; i--) {
             address iwpi = investorsWithPendingInvestments[i];
             uint256 amountToMint = (investors[iwpi].pendingInvestments * (10**18)) / _tokenEntryPrice;
             _mint(iwpi, amountToMint);
@@ -83,7 +83,7 @@ contract FRTC is ERC20, CustodialMarket {
     {
         uint256 liquidationPrice = ((_tokenExitPrice) * (2000000 - marketSpread)) / 2000000;
         investors[feeOwner].pendingWithdrawals += (_tokenExitPrice - liquidationPrice) * totalAmountToLiquidate;
-        for (uint256 i = investorsWithPendingLiquidations.length - 1; i >= 0; i--) {
+        for (uint256 i = investorsWithPendingLiquidations.length; i > 0; i--) {
             address iwpl = investorsWithPendingLiquidations[i];
             investors[iwpl].pendingWithdrawals += liquidationPrice * investors[iwpl].pendingLiquidations;
             investors[iwpl].pendingLiquidations = 0;

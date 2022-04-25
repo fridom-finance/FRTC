@@ -39,7 +39,7 @@ contract CustodialMarket is AccessControl {
     uint256 public marketSpread; // divide by 10⁶ to get raw quantity
 
     // Investors area
-    mapping(address => Investor) internal investors; // Address to their investor info
+    mapping(address => Investor) public investors; // Address to their investor info
     address[] internal investorsWithDeposits; // Investors having deposits pending for their collection
     address[] internal investorsWithPendingInvestments; // Investors having deposits pending for their investment
     address[] internal investorsWithTokensToSell; // Investors having tokens to sell
@@ -92,8 +92,8 @@ contract CustodialMarket is AccessControl {
         onlyInvestmentState(InvestmentStates.PendingCollection)
     {
         uint256 totalDeposits = 0;
-        for (uint256 i = investorsWithDeposits.length - 1; i >= 0; i--) {
-            address iwd = investorsWithDeposits[i];
+        for (uint256 i = investorsWithDeposits.length; i > 0; i--) {
+            address iwd = investorsWithDeposits[i - 1];
             totalDeposits += investors[iwd].deposits;
             investors[iwd].pendingInvestments += investors[iwd].deposits;
             investorsWithPendingInvestments.push(iwd);
@@ -120,8 +120,8 @@ contract CustodialMarket is AccessControl {
         onlyLiquidationState(LiquidationStates.PendingPreparation)
     {
         uint256 tatl = 0;
-        for (uint256 i = investorsWithTokensToSell.length - 1; i >= 0; i--) {
-            address iwtts = investorsWithTokensToSell[i];
+        for (uint256 i = investorsWithTokensToSell.length; i > 0; i--) {
+            address iwtts = investorsWithTokensToSell[i - 1];
             tatl += investors[iwtts].tokensToSell;
             investors[iwtts].pendingLiquidations += investors[iwtts].tokensToSell;
             investorsWithPendingLiquidations.push(iwtts);
@@ -144,6 +144,24 @@ contract CustodialMarket is AccessControl {
         uint256 amount = investors[msg.sender].pendingWithdrawals;
         investors[msg.sender].pendingWithdrawals = 0;
         payable(msg.sender).transfer(amount);
+    }
+
+    function getInvestorsState()
+        external
+        view
+        returns (
+            uint256,
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        return (
+            investorsWithDeposits.length,
+            investorsWithPendingInvestments.length,
+            investorsWithTokensToSell.length,
+            investorsWithPendingLiquidations.length
+        );
     }
 
     // Updates

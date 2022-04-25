@@ -7,7 +7,7 @@ import type { Artifact } from "hardhat/types";
 import type { FRTC } from "../../src/types/contracts/FRTC";
 import type { MathTester } from "../../src/types/contracts/MathTester";
 import { Signers } from "../types";
-import { shouldHaveUpdatableStateVariables } from "./FRTC.behavior";
+import { shouldHaveUpdatableStateVariables, shouldReceiveDepositsAndMintTokens } from "./FRTC.behavior";
 
 describe("Unit tests", function () {
   before(async function () {
@@ -16,8 +16,9 @@ describe("Unit tests", function () {
     const signers: SignerWithAddress[] = await ethers.getSigners();
     this.signers.admin = signers[0];
     this.signers.nonAdmin = signers[1];
-    this.signers.feeOwner = signers[2];
-    this.signers.depositAddress = signers[3];
+    this.signers.nonAdmin2 = signers[2];
+    this.signers.feeOwner = signers[3];
+    this.signers.depositAddress = signers[4];
   });
 
   describe("FRTC", function () {
@@ -59,6 +60,7 @@ describe("Unit tests", function () {
     });
 
     shouldHaveUpdatableStateVariables();
+    shouldReceiveDepositsAndMintTokens();
   });
 
   describe("Math", function () {
