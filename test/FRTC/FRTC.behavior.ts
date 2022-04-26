@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import { BigNumber } from "ethers";
 import { ethers } from "hardhat";
+import { exit } from "process";
 
 export function shouldHaveUpdatableStateVariables(): void {
   it("Should set a new market spread only by admin", async function () {
@@ -10,19 +11,11 @@ export function shouldHaveUpdatableStateVariables(): void {
     await expect(this.frtc.connect(this.signers.nonAdmin).setMarketSpread(newMarketSpread)).to.be.reverted;
   });
 
-  it("Should set a new management fee only by admin", async function () {
-    const newManagementFeePerSecond: BigNumber = BigNumber.from(200000);
-    await this.frtc.connect(this.signers.admin).setManagementFeePerSecond(newManagementFeePerSecond);
-    expect(await this.frtc.managementFeePerSecond()).to.equal(newManagementFeePerSecond);
-    await expect(this.frtc.connect(this.signers.nonAdmin).setManagementFeePerSecond(newManagementFeePerSecond)).to.be
-      .reverted;
-  });
-
-  it("Should set a new kReducer only by admin", async function () {
-    const newkReducer: BigNumber = BigNumber.from(10).pow(10);
-    await this.frtc.connect(this.signers.admin).setKReducer(newkReducer);
-    expect(await this.frtc.kReducer()).to.equal(newkReducer);
-    await expect(this.frtc.connect(this.signers.nonAdmin).setKReducer(newkReducer)).to.be.reverted;
+  it("Should set a new streaming fee only by admin", async function () {
+    const streamingFee: BigNumber = BigNumber.from(10).pow(16).mul(3);
+    await this.frtc.connect(this.signers.admin).setStreamingFee(streamingFee);
+    expect(await this.frtc.streamingFee()).to.equal(streamingFee);
+    await expect(this.frtc.connect(this.signers.nonAdmin).setStreamingFee(streamingFee)).to.be.reverted;
   });
 
   it("Should set a new deposit address only by admin", async function () {
@@ -37,14 +30,6 @@ export function shouldHaveUpdatableStateVariables(): void {
     await this.frtc.connect(this.signers.admin).setFeeOwner(newFeeOwner);
     expect((await this.frtc.feeOwner()).toUpperCase()).to.equal(newFeeOwner.toUpperCase());
     await expect(this.frtc.connect(this.signers.nonAdmin).setFeeOwner(newFeeOwner)).to.be.reverted;
-  });
-
-  it("Should set the isFreeOfFees field of address only by admin", async function () {
-    const nonAdminAddress = await this.signers.nonAdmin.getAddress();
-    expect((await this.frtc.connect(this.signers.nonAdmin).holders(nonAdminAddress)).isFreeOfFees).to.equal(false);
-    await this.frtc.connect(this.signers.admin).setHolderFreeOfFees(nonAdminAddress, true);
-    expect((await this.frtc.holders(nonAdminAddress)).isFreeOfFees).to.equal(true);
-    await expect(this.frtc.connect(this.signers.nonAdmin).setHolderFreeOfFees(nonAdminAddress, true)).to.be.reverted;
   });
 }
 
@@ -126,7 +111,6 @@ export function shouldReceiveDepositsAndMintTokens(): void {
   });
 
   it("Should mint tokens pro rata the investments only by admin", async function () {
-    const defaultBalance: BigNumber = BigNumber.from(10).pow(18).mul(10000);
     const zero: BigNumber = BigNumber.from(0);
     const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(150);
     const amountToDeposit2: BigNumber = BigNumber.from(10).pow(18).mul(200);
@@ -159,7 +143,90 @@ export function shouldReceiveDepositsAndMintTokens(): void {
   });
 }
 
-export function shouldTransferTokensAndTakeManagementFee(): void {
+export function shouldSellAndLiquidateTokens(): void {
+  it("Should sell tokens", async function () {
+    const zero: BigNumber = BigNumber.from(0);
+    const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(500);
+    const entryPrice: BigNumber = BigNumber.from(10).pow(17).mul(1022);
+    await this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit });
+    await this.frtc.connect(this.signers.admin).collectDeposits();
+    await this.frtc.connect(this.signers.admin).mintPendingInvestments(entryPrice);
+    const balance: BigNumber = await this.frtc.balanceOf(this.signers.nonAdmin.address);
+
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).tokensToSell).to.equal(zero);
+
+    const amountToSellFail: BigNumber = BigNumber.from(10).pow(17);
+    const amountToSell: BigNumber = balance.div(2);
+    await expect(this.frtc.connect(this.signers.nonAdmin).sell(amountToSellFail)).to.be.reverted;
+    await expect(this.frtc.connect(this.signers.nonAdmin).sell(amountToSell))
+      .to.emit(this.frtc, "TokenSaleRequested")
+      .withArgs(this.signers.nonAdmin.address, amountToSell);
+
+    let investorsState = await this.frtc.getInvestorsState();
+    expect(investorsState[0]).to.equal(zero);
+    expect(investorsState[1]).to.equal(zero);
+    expect(investorsState[2]).to.equal(BigNumber.from(1));
+    expect(investorsState[3]).to.equal(zero);
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).tokensToSell).to.equal(amountToSell);
+    expect(await this.frtc.balanceOf(this.signers.nonAdmin.address)).to.equal(balance.sub(amountToSell));
+    expect(await this.frtc.balanceOf(this.frtc.address)).to.equal(amountToSell);
+  });
+
+  it("Should Prepare liquidations", async function () {
+    const zero: BigNumber = BigNumber.from(0);
+    const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(500);
+    const entryPrice: BigNumber = BigNumber.from(10).pow(17).mul(1022);
+    await this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit });
+    await this.frtc.connect(this.signers.admin).collectDeposits();
+    await this.frtc.connect(this.signers.admin).mintPendingInvestments(entryPrice);
+    const balance: BigNumber = await this.frtc.balanceOf(this.signers.nonAdmin.address);
+    const amountToSell: BigNumber = balance.div(2);
+    await this.frtc.connect(this.signers.nonAdmin).sell(amountToSell);
+
+    await expect(this.frtc.connect(this.signers.nonAdmin).prepareLiquidations()).to.be.reverted;
+    await expect(this.frtc.connect(this.signers.admin).prepareLiquidations())
+      .to.emit(this.frtc, "LiquidationsPrepared")
+      .withArgs(amountToSell);
+    let investorsState = await this.frtc.getInvestorsState();
+    expect(investorsState[0]).to.equal(zero);
+    expect(investorsState[1]).to.equal(zero);
+    expect(investorsState[2]).to.equal(zero);
+    expect(investorsState[3]).to.equal(BigNumber.from(1));
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).tokensToSell).to.equal(zero);
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).pendingLiquidations).to.equal(amountToSell);
+  });
+
+  it("Should liquidate", async function () {
+    const zero: BigNumber = BigNumber.from(0);
+    const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(500);
+    const entryPrice: BigNumber = BigNumber.from(10).pow(17).mul(1022);
+    const exitPrice: BigNumber = BigNumber.from(10).pow(17).mul(2022);
+    await this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit });
+    await this.frtc.connect(this.signers.admin).collectDeposits();
+    await this.frtc.connect(this.signers.admin).mintPendingInvestments(entryPrice);
+    const balance: BigNumber = await this.frtc.balanceOf(this.signers.nonAdmin.address);
+    const amountToSell: BigNumber = balance.div(2);
+    await this.frtc.connect(this.signers.nonAdmin).sell(amountToSell);
+    await this.frtc.connect(this.signers.admin).prepareLiquidations();
+    const marketSpread: BigNumber = BigNumber.from(10000);
+    const liquidationPrice: BigNumber = exitPrice.mul(BigNumber.from(2000000).sub(marketSpread)).div(2000000);
+    const pendingWithdrawal: BigNumber = liquidationPrice.mul(amountToSell);
+
+    await expect(this.frtc.connect(this.signers.nonAdmin).liquidate(exitPrice)).to.be.reverted;
+    await expect(this.frtc.connect(this.signers.admin).liquidate(exitPrice))
+      .to.emit(this.frtc, "TokensLiquidated")
+      .withArgs(exitPrice);
+    let investorsState = await this.frtc.getInvestorsState();
+    expect(investorsState[0]).to.equal(zero);
+    expect(investorsState[1]).to.equal(zero);
+    expect(investorsState[2]).to.equal(zero);
+    expect(investorsState[3]).to.equal(zero);
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).tokensToSell).to.equal(zero);
+    expect((await this.frtc.investors(this.signers.nonAdmin.address)).pendingWithdrawals).to.equal(pendingWithdrawal);
+  });
+}
+
+export function shouldTransferTokens(): void {
   it("Should transfer tokens", async function () {
     const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(150);
     const entryPrice: BigNumber = BigNumber.from(10).pow(17).mul(1022);
@@ -176,5 +243,29 @@ export function shouldTransferTokensAndTakeManagementFee(): void {
       amountToDeposit.mul(BigNumber.from(10).pow(18)).div(entryPrice).sub(amountToTransfer),
     );
     expect(await this.frtc.balanceOf(this.signers.nonAdmin2.address)).to.equal(amountToTransfer);
+  });
+}
+
+export function shouldAccrueFees(): void {
+  it("Should accrue fees", async function () {
+    const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(150);
+    const entryPrice: BigNumber = BigNumber.from(10).pow(17).mul(1022);
+    await this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit });
+    await this.frtc.connect(this.signers.admin).collectDeposits();
+    await this.frtc.connect(this.signers.admin).mintPendingInvestments(entryPrice);
+    const balance: BigNumber = await this.frtc.balanceOf(this.signers.nonAdmin.address);
+
+    const timeElapsed: BigNumber = BigNumber.from(3600);
+    const streamingFee: BigNumber = BigNumber.from(10).pow(16).mul(2);
+    const oneYearInSeconds: BigNumber = BigNumber.from(365 * 24 * 3600);
+    const feePercentage: BigNumber = timeElapsed.mul(streamingFee).div(oneYearInSeconds);
+    const feeQuantity: BigNumber = feePercentage.mul(balance).div(BigNumber.from(10).pow(18));
+
+    await ethers.provider.send("evm_increaseTime", [3600]);
+
+    await expect(this.frtc.connect(this.signers.nonAdmin).accrueFee()).to.emit(this.frtc, "FeeTaken");
+
+    expect(await this.frtc.balanceOf(this.signers.feeOwner.address)).to.gt(feeQuantity);
+    expect(await this.frtc.balanceOf(this.signers.nonAdmin.address)).to.equal(balance);
   });
 }

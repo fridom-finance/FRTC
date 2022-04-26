@@ -8,9 +8,10 @@ import type { FRTC } from "../../src/types/contracts/FRTC";
 import type { MathTester } from "../../src/types/contracts/MathTester";
 import { Signers } from "../types";
 import {
+  shouldAccrueFees,
   shouldHaveUpdatableStateVariables,
   shouldReceiveDepositsAndMintTokens,
-  shouldTransferTokensAndTakeManagementFee,
+  shouldSellAndLiquidateTokens,
 } from "./FRTC.behavior";
 
 describe("Unit tests", function () {
@@ -33,8 +34,7 @@ describe("Unit tests", function () {
       const feeOwner: string = await this.signers.feeOwner.getAddress();
       const depositAddress: string = await this.signers.depositAddress.getAddress();
       const marketSpread: BigNumber = BigNumber.from(10000);
-      const managementFeePerSecond: BigNumber = BigNumber.from(146000);
-      const kReducer: BigNumber = BigNumber.from(10).pow(12);
+      const streamingFee: BigNumber = BigNumber.from(10).pow(16).mul(2);
       const minDeposit: BigNumber = BigNumber.from(10).pow(18).mul(100);
       const minWithdrawal: BigNumber = BigNumber.from(10).pow(18);
 
@@ -43,8 +43,7 @@ describe("Unit tests", function () {
         feeOwner,
         depositAddress,
         marketSpread,
-        managementFeePerSecond,
-        kReducer,
+        streamingFee,
         minDeposit,
         minWithdrawal,
       ];
@@ -57,7 +56,7 @@ describe("Unit tests", function () {
 
       expect(await this.frtc.feeOwner()).to.equal(feeOwner);
       expect(await this.frtc.depositAddress()).to.equal(depositAddress);
-      expect(await this.frtc.managementFeePerSecond()).to.equal(BigNumber.from(146000));
+      expect(await this.frtc.streamingFee()).to.equal(BigNumber.from(10).pow(16).mul(2));
       expect(await this.frtc.marketSpread()).to.equal(BigNumber.from(10000));
       expect(await this.frtc.minDeposit()).to.equal(BigNumber.from(10).pow(18).mul(100));
       expect(await this.frtc.minWithdrawal()).to.equal(BigNumber.from(10).pow(18));
@@ -65,7 +64,8 @@ describe("Unit tests", function () {
 
     shouldHaveUpdatableStateVariables();
     shouldReceiveDepositsAndMintTokens();
-    shouldTransferTokensAndTakeManagementFee();
+    shouldSellAndLiquidateTokens();
+    shouldAccrueFees();
   });
 
   describe("Math", function () {

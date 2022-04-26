@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -6,18 +7,18 @@ import "./CustodialMarket.sol";
 import "./Math.sol";
 
 contract FRTC is ERC20, CustodialMarket {
-    /* Structs */
+    /* Constants */
 
-    struct Holder {
-        uint256 lastFeeCharge; // timestamp of last time the management fee was charged
-        bool isFreeOfFees; // Does the holder have to pay fees?
-    }
+    uint256 private constant ONE_YEAR_IN_SECONDS = 365 days;
 
     /* Storage */
 
-    uint256 public managementFeePerSecond; // Divide by 10¹⁴ to get raw managementFeePerSecond
-    uint256 public kReducer;
-    mapping(address => Holder) public holders; // Address to their holder info
+    uint256 public lastStreamingFeeTimestamp; // Timestamp last streaming fee was accrued
+    uint256 public streamingFee; // annual management fee,  1% = 10¹⁶
+
+    /* Events */
+
+    event FeeTaken(uint256 amount);
 
     /* Constructor */
 
@@ -26,23 +27,19 @@ contract FRTC is ERC20, CustodialMarket {
         address _feeOwner,
         address _depositAddress,
         uint256 _marketSpread,
-        uint256 _managementFeePerSecond,
-        uint256 _kReducer,
+        uint256 _streamingFee,
         uint256 _minDeposit,
         uint256 _minWithdrawal
     ) ERC20("Fridom Top Currencies", "FRTC") {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         feeOwner = _feeOwner;
         depositAddress = _depositAddress;
-        managementFeePerSecond = _managementFeePerSecond;
-        kReducer = _kReducer;
+        streamingFee = _streamingFee;
         marketSpread = _marketSpread;
         minDeposit = _minDeposit;
         minWithdrawal = _minWithdrawal;
 
-        holders[address(0)].isFreeOfFees = true;
-        holders[address(this)].isFreeOfFees = true;
-        holders[address(feeOwner)].isFreeOfFees = true;
+        lastStreamingFeeTimestamp = block.timestamp;
     }
 
     /* Functions */
@@ -96,51 +93,18 @@ contract FRTC is ERC20, CustodialMarket {
         emit TokensLiquidated(_tokenExitPrice);
     }
 
-    function getAccruedFees(address _holder) public view returns (uint256 accrued) {
-        return super.balanceOf(_holder) - balanceOf(_holder);
-    }
-
-    function takeManagementFee(address _holder) public {
-        uint256 accruedFees = getAccruedFees(_holder);
-        holders[_holder].lastFeeCharge = block.timestamp;
-        _transfer(_holder, feeOwner, accruedFees);
-    }
-
-    function balanceOf(address account) public view override returns (uint256) {
-        if (holders[account].lastFeeCharge == 0 || holders[account].isFreeOfFees) return super.balanceOf(account);
-        uint256 p = 6;
-        uint256 q = (10**14) / managementFeePerSecond;
-        uint256 secondsElapsed = block.timestamp - holders[account].lastFeeCharge;
-        if (secondsElapsed < p) {
-            return super.balanceOf(account);
-        } else {
-            return kReducer * Math.fracExpNeg(super.balanceOf(account) / kReducer, q, secondsElapsed, p);
-        }
-    }
-
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override {
-        if (to != feeOwner && from != address(0) && to != address(0)) {
-            // too ugly?
-            takeManagementFee(from);
-            takeManagementFee(to);
-        }
+    function accrueFee() public {
+        uint256 timeSinceLastFee = block.timestamp - lastStreamingFeeTimestamp;
+        uint256 feePercentage = (timeSinceLastFee * streamingFee) / ONE_YEAR_IN_SECONDS;
+        uint256 feeQuantity = (feePercentage * totalSupply()) / (10**18);
+        _mint(feeOwner, feeQuantity);
+        lastStreamingFeeTimestamp = block.timestamp;
+        emit FeeTaken(feeQuantity);
     }
 
     // Updates
 
-    function setManagementFeePerSecond(uint256 _managementFeePerSecond) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        managementFeePerSecond = _managementFeePerSecond;
-    }
-
-    function setHolderFreeOfFees(address _holder, bool _newValue) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        holders[_holder].isFreeOfFees = _newValue;
-    }
-
-    function setKReducer(uint256 _kReducer) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        kReducer = _kReducer;
+    function setStreamingFee(uint256 _streamingFee) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        streamingFee = _streamingFee;
     }
 }
