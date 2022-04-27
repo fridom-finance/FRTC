@@ -1,5 +1,5 @@
 import { expect } from "chai";
-import { BigNumber } from "ethers";
+import { BigNumber, ContractTransaction } from "ethers";
 import { ethers } from "hardhat";
 import { exit } from "process";
 
@@ -198,22 +198,28 @@ export function shouldSellAndLiquidateTokens(): void {
 
   it("Should liquidate", async function () {
     const zero: BigNumber = BigNumber.from(0);
+    const marketSpread: BigNumber = BigNumber.from(10000);
     const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(500);
     const entryPrice: BigNumber = BigNumber.from(10).pow(17).mul(1022);
     const exitPrice: BigNumber = BigNumber.from(10).pow(17).mul(2022);
     await this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit });
+    const feeTaken: BigNumber = amountToDeposit.mul(marketSpread).div(BigNumber.from(10).pow(6).mul(2));
     await this.frtc.connect(this.signers.admin).collectDeposits();
     await this.frtc.connect(this.signers.admin).mintPendingInvestments(entryPrice);
     const balance: BigNumber = await this.frtc.balanceOf(this.signers.nonAdmin.address);
     const amountToSell: BigNumber = balance.div(2);
     await this.frtc.connect(this.signers.nonAdmin).sell(amountToSell);
     await this.frtc.connect(this.signers.admin).prepareLiquidations();
-    const marketSpread: BigNumber = BigNumber.from(10000);
     const liquidationPrice: BigNumber = exitPrice.mul(BigNumber.from(2000000).sub(marketSpread)).div(2000000);
-    const pendingWithdrawal: BigNumber = liquidationPrice.mul(amountToSell);
+    const pendingWithdrawal: BigNumber = liquidationPrice.mul(amountToSell).div(BigNumber.from(10).pow(18));
+    const feeTaken2: BigNumber = exitPrice.sub(liquidationPrice).mul(amountToSell).div(BigNumber.from(10).pow(18));
 
     await expect(this.frtc.connect(this.signers.nonAdmin).liquidate(exitPrice)).to.be.reverted;
-    await expect(this.frtc.connect(this.signers.admin).liquidate(exitPrice))
+    await expect(
+      this.frtc
+        .connect(this.signers.admin)
+        .liquidate(exitPrice, { value: exitPrice.mul(amountToSell).div(BigNumber.from(10).pow(18)) }),
+    )
       .to.emit(this.frtc, "TokensLiquidated")
       .withArgs(exitPrice);
     let investorsState = await this.frtc.getInvestorsState();
@@ -223,6 +229,49 @@ export function shouldSellAndLiquidateTokens(): void {
     expect(investorsState[3]).to.equal(zero);
     expect((await this.frtc.investors(this.signers.nonAdmin.address)).tokensToSell).to.equal(zero);
     expect((await this.frtc.investors(this.signers.nonAdmin.address)).pendingWithdrawals).to.equal(pendingWithdrawal);
+    expect((await this.frtc.investors(this.signers.feeOwner.address)).pendingWithdrawals).to.be.closeTo(
+      feeTaken.add(feeTaken2),
+      1,
+    );
+    expect(await this.frtc.balanceOf(this.frtc.address)).to.be.equal(zero);
+  });
+
+  it("Should withdraw", async function () {
+    const zero: BigNumber = BigNumber.from(0);
+    const marketSpread: BigNumber = BigNumber.from(10000);
+    const amountToDeposit: BigNumber = BigNumber.from(10).pow(18).mul(500);
+    const entryPrice: BigNumber = BigNumber.from(10).pow(17).mul(1022);
+    const exitPrice: BigNumber = BigNumber.from(10).pow(17).mul(2022);
+    await this.frtc.connect(this.signers.nonAdmin).buy({ value: amountToDeposit });
+    const feeTaken: BigNumber = amountToDeposit.mul(marketSpread).div(BigNumber.from(10).pow(6).mul(2));
+    await this.frtc.connect(this.signers.admin).collectDeposits();
+    await this.frtc.connect(this.signers.admin).mintPendingInvestments(entryPrice);
+    const balance: BigNumber = await this.frtc.balanceOf(this.signers.nonAdmin.address);
+    const amountToSell: BigNumber = balance.div(2);
+    await this.frtc.connect(this.signers.nonAdmin).sell(amountToSell);
+    await this.frtc.connect(this.signers.admin).prepareLiquidations();
+    const liquidationPrice: BigNumber = exitPrice.mul(BigNumber.from(2000000).sub(marketSpread)).div(2000000);
+    const pendingWithdrawal: BigNumber = liquidationPrice.mul(amountToSell).div(BigNumber.from(10).pow(18));
+    const feeTaken2: BigNumber = exitPrice.sub(liquidationPrice).mul(amountToSell).div(BigNumber.from(10).pow(18));
+    await this.frtc
+      .connect(this.signers.admin)
+      .liquidate(exitPrice, { value: exitPrice.mul(amountToSell).div(BigNumber.from(10).pow(18)) });
+
+    const balanceBeforeWithdraw: BigNumber = await this.signers.feeOwner.getBalance();
+    const balanceBeforeWithdraw2: BigNumber = await this.signers.nonAdmin.getBalance();
+
+    await this.frtc.connect(this.signers.feeOwner).withdraw();
+    await this.frtc.connect(this.signers.nonAdmin).withdraw();
+
+    const gasCost: BigNumber = BigNumber.from(10).pow(14);
+    expect(await this.signers.feeOwner.getBalance()).to.be.closeTo(
+      balanceBeforeWithdraw.add(feeTaken.add(feeTaken2)),
+      gasCost,
+    );
+    expect(await this.signers.nonAdmin.getBalance()).to.be.closeTo(
+      balanceBeforeWithdraw2.add(pendingWithdrawal),
+      gasCost,
+    );
   });
 }
 

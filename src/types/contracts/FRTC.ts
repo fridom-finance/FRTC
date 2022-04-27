@@ -668,7 +668,7 @@ export interface FRTC extends BaseContract {
 
     liquidate(
       _tokenExitPrice: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     liquidationState(overrides?: CallOverrides): Promise<[number]>;
@@ -853,7 +853,7 @@ export interface FRTC extends BaseContract {
 
   liquidate(
     _tokenExitPrice: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   liquidationState(overrides?: CallOverrides): Promise<number>;
@@ -1292,7 +1292,7 @@ export interface FRTC extends BaseContract {
 
     liquidate(
       _tokenExitPrice: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     liquidationState(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1478,7 +1478,7 @@ export interface FRTC extends BaseContract {
 
     liquidate(
       _tokenExitPrice: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     liquidationState(overrides?: CallOverrides): Promise<PopulatedTransaction>;

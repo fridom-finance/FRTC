@@ -74,15 +74,20 @@ contract FRTC is ERC20, CustodialMarket {
 
     function liquidate(uint256 _tokenExitPrice)
         external
+        payable
         override
         onlyRole(DEFAULT_ADMIN_ROLE)
         onlyLiquidationState(LiquidationStates.PendingLiquidation)
     {
+        require(
+            msg.value >= (_tokenExitPrice * totalAmountToLiquidate) / (10**18),
+            "Not enough native token for liquidation"
+        );
         uint256 liquidationPrice = ((_tokenExitPrice) * (2000000 - marketSpread)) / 2000000;
-        investors[feeOwner].pendingWithdrawals += (_tokenExitPrice - liquidationPrice) * totalAmountToLiquidate;
+        investors[feeOwner].pendingWithdrawals += msg.value - ((liquidationPrice * totalAmountToLiquidate) / (10**18));
         for (uint256 i = investorsWithPendingLiquidations.length; i > 0; i--) {
             address iwpl = investorsWithPendingLiquidations[i - 1];
-            investors[iwpl].pendingWithdrawals += liquidationPrice * investors[iwpl].pendingLiquidations;
+            investors[iwpl].pendingWithdrawals += ((liquidationPrice * investors[iwpl].pendingLiquidations) / (10**18));
             investors[iwpl].pendingLiquidations = 0;
             investorsWithPendingLiquidations.pop();
         }

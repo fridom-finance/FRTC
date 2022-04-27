@@ -135,6 +135,7 @@ contract CustodialMarket is AccessControl {
 
     function liquidate(uint256 _exitPrice)
         external
+        payable
         virtual
         onlyRole(DEFAULT_ADMIN_ROLE)
         onlyLiquidationState(LiquidationStates.PendingLiquidation)
