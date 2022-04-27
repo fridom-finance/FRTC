@@ -11,6 +11,7 @@ import "solidity-coverage";
 import "./tasks/accounts";
 import "./tasks/balance";
 import "./tasks/deploy";
+import "./tasks/getFRTCState";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -64,7 +65,7 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
 }
 
 const config: HardhatUserConfig = {
-  defaultNetwork: "hardhat",
+  defaultNetwork: "polygon-mumbai",
   etherscan: {
     apiKey: {
       arbitrumOne: process.env.ARBISCAN_API_KEY,
