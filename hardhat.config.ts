@@ -9,9 +9,13 @@ import { resolve } from "path";
 import "solidity-coverage";
 
 import "./tasks/accounts";
+import "./tasks/accrueFee";
 import "./tasks/balance";
 import "./tasks/deploy";
-import "./tasks/getFRTCState";
+import "./tasks/investmentFlow";
+import "./tasks/liquidationFlow";
+import "./tasks/queries";
+import "./tasks/updates";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 

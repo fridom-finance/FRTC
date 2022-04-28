@@ -1,1 +1,2 @@
 import "./updateMinDeposit";
+import "./updateMinWithdrawal";

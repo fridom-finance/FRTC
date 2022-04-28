@@ -2,8 +2,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { task } from "hardhat/config";
 import { TaskArguments } from "hardhat/types";
 
-import { FRTC } from "../src/types/contracts/FRTC";
-import { FRTC__factory } from "../src/types/factories/contracts/FRTC__factory";
+import { FRTC } from "../../src/types/contracts/FRTC";
+import { FRTC__factory } from "../../src/types/factories/contracts/FRTC__factory";
 
 task("getFRTCState")
   .addParam("frtcaddress")
