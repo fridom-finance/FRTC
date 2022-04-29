@@ -1,2 +1,1 @@
 import "./FRTC";
-import "./greeter";
