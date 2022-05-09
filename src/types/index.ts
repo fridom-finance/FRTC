@@ -24,5 +24,3 @@ export type { CustodialMarket } from "./contracts/CustodialMarket";
 export { CustodialMarket__factory } from "./factories/contracts/CustodialMarket__factory";
 export type { FRTC } from "./contracts/FRTC";
 export { FRTC__factory } from "./factories/contracts/FRTC__factory";
-export type { MathTester } from "./contracts/MathTester";
-export { MathTester__factory } from "./factories/contracts/MathTester__factory";

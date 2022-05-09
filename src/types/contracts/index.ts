@@ -3,4 +3,3 @@
 /* eslint-disable */
 export type { CustodialMarket } from "./CustodialMarket";
 export type { FRTC } from "./FRTC";
-export type { MathTester } from "./MathTester";

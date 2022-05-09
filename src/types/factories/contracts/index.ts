@@ -3,4 +3,3 @@
 /* eslint-disable */
 export { CustodialMarket__factory } from "./CustodialMarket__factory";
 export { FRTC__factory } from "./FRTC__factory";
-export { MathTester__factory } from "./MathTester__factory";

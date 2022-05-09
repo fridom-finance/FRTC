@@ -2,11 +2,9 @@ import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signe
 import type { Fixture } from "ethereum-waffle";
 
 import type { FRTC } from "../src/types/contracts/FRTC";
-import type { MathTester } from "../src/types/contracts/MathTester";
 
 declare module "mocha" {
   export interface Context {
-    math: MathTester;
     frtc: FRTC;
     loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
     signers: Signers;

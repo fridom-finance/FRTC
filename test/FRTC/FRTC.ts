@@ -5,7 +5,6 @@ import { artifacts, ethers, waffle } from "hardhat";
 import type { Artifact } from "hardhat/types";
 
 import type { FRTC } from "../../src/types/contracts/FRTC";
-import type { MathTester } from "../../src/types/contracts/MathTester";
 import { Signers } from "../types";
 import {
   shouldAccrueFees,
@@ -66,41 +65,5 @@ describe("Unit tests", function () {
     shouldReceiveDepositsAndMintTokens();
     shouldSellAndLiquidateTokens();
     shouldAccrueFees();
-  });
-
-  describe("Math", function () {
-    beforeEach(async function () {
-      const MathArtifact: Artifact = await artifacts.readArtifact("MathTester");
-      this.math = <MathTester>await waffle.deployContract(this.signers.admin, MathArtifact, []);
-    });
-    it("Should compute accurately enough diverse fractional exponentials", async function () {
-      let k: BigNumber = BigNumber.from(4000000); // 4 token units
-      let q: BigNumber = BigNumber.from(684931506); // mfps = 146000 * 10¹⁴
-      let n: BigNumber = BigNumber.from(315360000); // 10 years
-      let p: BigNumber = BigNumber.from(6); // 6 iterations
-      let val: BigNumber = await this.math.testFracExpNeg(k, q, n, p);
-      console.log(val.toNumber());
-      expect(val).to.be.closeTo(BigNumber.from(2524060), BigNumber.from(100)); // precision of 0.0001
-      k = BigNumber.from(10000000000); // 10000 token units
-      n = BigNumber.from(315360000); // 10 years
-      val = await this.math.testFracExpNeg(k, q, n, p);
-      console.log(val.toNumber());
-      expect(val).to.be.closeTo(BigNumber.from(6310150281), BigNumber.from(200000)); // precision of 0.2
-      k = BigNumber.from(100000000000); // 100000 token units
-      n = BigNumber.from(315360000); // 10 years
-      val = await this.math.testFracExpNeg(k, q, n, p);
-      console.log(val.toNumber());
-      expect(val).to.be.closeTo(BigNumber.from(63101502810), BigNumber.from(2000000)); // precision of 2
-      k = BigNumber.from(10000000); // 10 token units
-      n = BigNumber.from(630720000); // 20 years
-      val = await this.math.testFracExpNeg(k, q, n, p);
-      console.log(val.toNumber());
-      expect(val).to.be.closeTo(BigNumber.from(3981799), BigNumber.from(10000)); // precision of 0.01
-      k = BigNumber.from(1000000000000); // 1000000 token units
-      n = BigNumber.from(31536000); // 1 year
-      val = await this.math.testFracExpNeg(k, q, n, p);
-      console.log(val.toNumber());
-      expect(val).to.be.closeTo(BigNumber.from(955001316400), BigNumber.from(100)); // precision of 0.0001
-    });
   });
 });

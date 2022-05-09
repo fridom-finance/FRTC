@@ -48,10 +48,6 @@ declare module "hardhat/types/runtime" {
       name: "FRTC",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.FRTC__factory>;
-    getContractFactory(
-      name: "MathTester",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MathTester__factory>;
 
     getContractAt(
       name: "AccessControl",
@@ -98,11 +94,6 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.FRTC>;
-    getContractAt(
-      name: "MathTester",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MathTester>;
 
     // default types
     getContractFactory(
