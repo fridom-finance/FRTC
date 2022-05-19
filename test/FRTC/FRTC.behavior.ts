@@ -1,7 +1,6 @@
 import { expect } from "chai";
 import { BigNumber, ContractTransaction } from "ethers";
 import { ethers } from "hardhat";
-import { exit } from "process";
 
 export function shouldHaveUpdatableStateVariables(): void {
   it("Should set a new market spread only by admin", async function () {

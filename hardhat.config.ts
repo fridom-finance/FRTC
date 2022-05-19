@@ -54,6 +54,9 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
     case "polygon-mumbai":
       jsonRpcUrl = "https://polygon-mumbai.g.alchemy.com/v2/RGPhWsJCplbShwpSYOo1Df7oplSaTl8d";
       break;
+    case "polygon-mainnet":
+      jsonRpcUrl = "https://polygon-mainnet.g.alchemy.com/v2/-ON6pB8j0K6Vk46RoTWcZw17nl0yBjxx";
+      break;
     default:
       jsonRpcUrl = "https://" + chain + ".infura.io/v3/" + infuraApiKey;
   }
