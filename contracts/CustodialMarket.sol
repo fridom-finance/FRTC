@@ -3,8 +3,19 @@ pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 
+/**
+ *  @title CustodialMarket
+ *  This contract is a custodial market completely managed by the DEFAULT_ADMIN_ROLE, token
+ *  is purchased and sold in this contract.
+ *  It is designed to descentralize and facilitate investments done to off-chain assets
+ *  represented by the token traded in this smart contract.
+ *  Keeps track of the life cycle of the investor's investment.
+ *  Keeps track of global states like the investment and liquidation states.
+ *  Manages deposits and withdrawals in a batch like manner.
+ */
 contract CustodialMarket is AccessControl {
     /* Enums */
+
     enum InvestmentStates {
         PendingCollection,
         PendingInvestment
@@ -65,16 +76,48 @@ contract CustodialMarket is AccessControl {
 
     /* Events */
 
-    event TokenPurchaseRequested(address indexed from, uint256 value);
-    event DepositsCollected(uint256 totalValue);
-    event TokenMinted(uint256 entryPrice);
+    /**
+     *  @dev Emitted when the buy function is called
+     *  @param _from Address that made the deposit
+     *  @param _value Native token amount that was deposited
+     */
+    event TokenPurchaseRequested(address indexed _from, uint256 _value);
+    /**
+     *  @dev Emitted when the deposits are collected and sent to the deposit address
+     *  @param _totalValue Native token amount collected
+     */
+    event DepositsCollected(uint256 _totalValue);
+    /**
+     *  @dev Emitted when token is minted to investors
+     *  @param _entryPrice Price of token in terms of native token at which the token
+     *  is minted
+     */
+    event TokenMinted(uint256 _entryPrice);
 
-    event TokenSaleRequested(address indexed from, uint256 value);
-    event LiquidationsPrepared(uint256 totalValue);
-    event TokensLiquidated(uint256 exitPrice);
+    /**
+     *  @dev Emitted when token is sold
+     *  @param _from Address that made the withdrawal request
+     *  @param _value Token amount to liquidate
+     */
+    event TokenSaleRequested(address indexed _from, uint256 _value);
+    /**
+     *  @dev Emitted when the prepareLiquidations function is called, and
+     *  tokens are locked for their future burn
+     *  @param _totalValue Total amount of token to be liquidated
+     */
+    event LiquidationsPrepared(uint256 _totalValue);
+    /**
+     *  @dev Emitted when off-chain assets are liquidated and tokens are burned
+     *  @param _exitPrice Price of token in terms of native token at which the token
+     *  is burned
+     */
+    event TokensLiquidated(uint256 _exitPrice);
 
     /* Functions */
 
+    /**
+     *  @dev Deposits native token to buy token
+     */
     function buy() public payable {
         require(msg.value >= minDeposit, "Not enough deposit");
         uint256 fee = (msg.value * marketSpread) / 2000000;
@@ -86,6 +129,9 @@ contract CustodialMarket is AccessControl {
         emit TokenPurchaseRequested(msg.sender, msg.value);
     }
 
+    /**
+     *  @dev Collects native token and is transfered to the deposit address.
+     */
     function collectDeposits()
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -105,6 +151,11 @@ contract CustodialMarket is AccessControl {
         emit DepositsCollected(totalDeposits);
     }
 
+    /**
+     *  @dev Mints token according to pending investments
+     *  @param _tokenEntryPrice Price of token in terms of native token at which the token
+     *  is minted
+     */
     function mintPendingInvestments(uint256 _tokenEntryPrice)
         external
         virtual
@@ -112,8 +163,16 @@ contract CustodialMarket is AccessControl {
         onlyInvestmentState(InvestmentStates.PendingInvestment)
     {}
 
+    /**
+     *  @dev Token is sent to this contract for their future burn
+     *  @param _amountToSell Amount of token sent to this contract
+     */
     function sell(uint256 _amountToSell) external virtual {}
 
+    /**
+     *  @dev Tokens sold to this contract, are locked for their future burn and liquidation
+     *  of the assets they represent
+     */
     function prepareLiquidations()
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
@@ -133,7 +192,12 @@ contract CustodialMarket is AccessControl {
         emit LiquidationsPrepared(totalAmountToLiquidate);
     }
 
-    function liquidate(uint256 _exitPrice)
+    /**
+     *  @dev Token locked is burned
+     *  @param _tokenExitPrice Price of token in terms of native token at which the token
+     *  is burned
+     */
+    function liquidate(uint256 _tokenExitPrice)
         external
         payable
         virtual
@@ -141,12 +205,24 @@ contract CustodialMarket is AccessControl {
         onlyLiquidationState(LiquidationStates.PendingLiquidation)
     {}
 
+    /**
+     *  @dev Withdraws native token after liquidation
+     */
     function withdraw() external {
         uint256 amount = investors[msg.sender].pendingWithdrawals;
         investors[msg.sender].pendingWithdrawals = 0;
         payable(msg.sender).transfer(amount);
     }
 
+    /**
+     *  @dev Returns the number of investors in each of the investment stages (with deposits,
+     *  pendingInvestments, tokensToSell, pendingLiquidations)
+     *  @return (uint256,uint256,uint256,uint256)
+     *  1 - Number of investors with deposits
+     *  2 - Number of investors with pending investments
+     *  3 - Number of investors with tokens to sell
+     *  4 - Number of investors with pending liquidations
+     */
     function getInvestorsState()
         external
         view

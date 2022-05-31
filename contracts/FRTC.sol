@@ -5,6 +5,14 @@ pragma solidity ^0.8.13;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./CustodialMarket.sol";
 
+/**
+ *  @title FRTC
+ *  This contract is an ERC20 token supporting a streaming fee based on the current total supply.
+ *  The fee works by emitting a token amount to the fee owner calculated from the total supply,
+ *  streaming fee and the timestamp from the last time the fee was taken.
+ *  Additionally, FRTC is also a custodial market that works as a primary market ensuring the
+ *  peg between FRTC and the fund's current unit price.
+ */
 contract FRTC is ERC20, CustodialMarket {
     /* Constants */
 
@@ -17,10 +25,24 @@ contract FRTC is ERC20, CustodialMarket {
 
     /* Events */
 
-    event FeeTaken(uint256 amount);
+    /**
+     *  @dev Emitted when the streaming fee is taken
+     *  @param _amount Token amount minted to fee owner
+     */
+    event FeeTaken(uint256 _amount);
 
     /* Constructor */
 
+    /**
+     *  @dev constructor
+     *  @param _defaultAdmin Address representing contract's owner
+     *  @param _feeOwner Address containing all fees taken by the contract
+     *  @param _depositAddress Address that collects the deposits made to the contract
+     *  @param _marketSpread Spread between bid and ask prices of custodial market
+     *  @param _streamingFee Annual management fee taken by emitting tokens to fee owner
+     *  @param _minDeposit Minimum native token amount required for deposits
+     *  @param _minWithdrawal Minimum FRTC amount required for withdrawals
+     */
     constructor(
         address _defaultAdmin,
         address _feeOwner,
@@ -97,6 +119,9 @@ contract FRTC is ERC20, CustodialMarket {
         emit TokensLiquidated(_tokenExitPrice);
     }
 
+    /**
+     *  @dev Streams fee to fee owner
+     */
     function accrueFee() public {
         uint256 timeSinceLastFee = block.timestamp - lastStreamingFeeTimestamp;
         uint256 feePercentage = (timeSinceLastFee * streamingFee) / ONE_YEAR_IN_SECONDS;
